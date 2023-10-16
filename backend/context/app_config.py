@@ -37,7 +37,7 @@ class ConfigValue:
     @property
     def value(self):
         with self._lock:
-            if self._hash_val != self._config._chash:
+            if self._hash_val != self._config.config_hash:
                 self._config.wait_for_reload()
                 self._cache_val = self._dive()
 
@@ -46,7 +46,7 @@ class ConfigValue:
     def _dive(self):
         path = self._pattern.split("::")
 
-        crr_section = self._config._data
+        crr_section = self._config.data
         for section in path:
             crr_section = crr_section.get(section)
 
@@ -75,10 +75,6 @@ class AppConfig(SingletonObject):
     def wait_for_reload(self):
         self._cfg_guard.wait()
 
-    @property
-    def version_hash(self):
-        return self._chash
-
     def reload_config(self, *args, **kwargs):
         with open(self.config_file) as file:
             self._cfg_guard.clear()
@@ -92,6 +88,14 @@ class AppConfig(SingletonObject):
 
     def get(self, pattern: str, cast_to: type = str):
         return ConfigValue(pattern, self, cast_to)
+
+    @property
+    def config_hash(self):
+        return self._chash
+
+    @property
+    def data(self):
+        return self._data
 
 
 if __name__ == "__main__":
