@@ -1,12 +1,19 @@
 from threading import Lock
 
+from utils.generic_object import GenericObjectMeta
 
-class SingletonMeta(type):
+
+class SingletonMeta(GenericObjectMeta):
     _instances = {}
-    _lock: Lock = Lock()
+    _init_locks = {}
+    _singleton_lock = Lock()
 
     def __call__(cls, *args, **kwargs):
-        with cls._lock:
+        with cls._singleton_lock:
+            if cls not in cls._init_locks:
+                cls._init_locks[cls] = Lock()
+
+        with cls._init_locks[cls]:
             if cls not in cls._instances:
                 instance = super().__call__(*args, **kwargs)
                 cls._instances[cls] = instance
@@ -15,7 +22,9 @@ class SingletonMeta(type):
 
 
 class SingletonObject(metaclass=SingletonMeta):
-    pass
+    @property
+    def logger(self):
+        return self._logger
 
 
 if __name__ == "__main__":
