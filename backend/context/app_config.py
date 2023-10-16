@@ -1,13 +1,31 @@
+from __future__ import annotations
+
+import logging
+import os.path
+from threading import Lock, Event
+from typing import Type, Dict
+
 import envsubst
 import yaml
-from typing import Optional, Type, Callable
-from threading import Lock
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from utils.singleton import SingletonObject
 
 
+class ConfigFileWatcher(FileSystemEventHandler):
+    def __init__(self, config: AppConfig):
+        self._config = config
+
+    def on_modified(self, event):
+        if os.path.abspath(event.src_path) == os.path.abspath(self._config.config_file):
+            self._config.reload_config()
+
+
 class ConfigValue:
-    def __init__(self, pattern, config, cast):
+    def __init__(self, pattern: str, config: AppConfig, cast: Type):
+        self._logger = logging.getLogger(self.__class__.__name__)
+
         self._pattern = pattern
         self._config = config
         self._cast = cast
@@ -20,6 +38,7 @@ class ConfigValue:
     def value(self):
         with self._lock:
             if self._hash_val != self._config._chash:
+                self._config.wait_for_reload()
                 self._cache_val = self._dive()
 
         return self._cache_val
@@ -38,19 +57,38 @@ class ConfigValue:
 
 
 class AppConfig(SingletonObject):
-    _data: dict
+    _data: Dict
     _chash: int
 
     def __init__(self, config_file: str = "config/config-default.yaml"):
         self.config_file = config_file
+        self._cfg_guard = Event()
+
         self.reload_config()
 
-    def reload_config(self):
+        self._observer = Observer()
+        self._change_handler = ConfigFileWatcher(self)
+
+        self._observer.schedule(self._change_handler, os.path.dirname(self.config_file))
+        self._observer.start()
+
+    def wait_for_reload(self):
+        self._cfg_guard.wait()
+
+    @property
+    def version_hash(self):
+        return self._chash
+
+    def reload_config(self, *args, **kwargs):
         with open(self.config_file) as file:
+            self._cfg_guard.clear()
+
             content = file.read()
             content = envsubst.envsubst(content)
             self._chash = hash(content)
             self._data = yaml.safe_load(content)
+
+            self._cfg_guard.set()
 
     def get(self, pattern: str, cast_to: type = str):
         return ConfigValue(pattern, self, cast_to)
@@ -60,4 +98,5 @@ if __name__ == "__main__":
     cfg = AppConfig()
     mc = cfg.get("my::config")
 
-    print(mc.value)
+    while input("Check? ") == "y":
+        print(mc.value)
