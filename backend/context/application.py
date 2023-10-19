@@ -9,17 +9,9 @@ from utils.singleton import SingletonObject
 
 class Application(SingletonObject):
     def __init__(self):
-        self._controller = AppController()
-        self._config = AppConfig()
-        self._argparser = argparse.ArgumentParser()
-
-        self._argparser.add_argument(
-            "-e", "--env",
-            action="append",
-            dest="env_list",
-            help="Modify environment variables")
-
-        self._configure_logging()
+        self._config = None
+        self._argparser = None
+        self._controller = None
 
     def _configure_logging(self):
         configured_level = self._config.get("logging::level", "INFO").value
@@ -29,7 +21,26 @@ class Application(SingletonObject):
             format=configured_format)
 
     def start(self):
+        self._controller = AppController()
+        self._argparser = argparse.ArgumentParser()
+
+        self._argparser.add_argument(
+            "-e", "--env",
+            action="append",
+            dest="env_list",
+            help="Modify environment variables")
+
+        self._argparser.add_argument(
+            "-c", "--config",
+            action="store",
+            dest="config_file",
+            help="Configuration file",
+            default="config/config-default.yaml")
+
         args = self._argparser.parse_args()
+
+        self._config = AppConfig(args.config_file)
+        self._configure_logging()
 
         if args.env_list is not None:
             for env in args.env_list:
