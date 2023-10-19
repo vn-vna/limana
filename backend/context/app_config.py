@@ -23,8 +23,9 @@ class ConfigFileWatcher(FileSystemEventHandler):
 
 
 class ConfigValue:
-    def __init__(self, pattern: str, config: AppConfig, cast: Type):
+    def __init__(self, pattern: str, config: AppConfig, default: any, cast: Type):
         self._logger = logging.getLogger(self.__class__.__name__)
+        self._default = default
 
         self._pattern = pattern
         self._config = config
@@ -52,6 +53,9 @@ class ConfigValue:
 
         if self._cast is not None:
             return self._cast(crr_section)
+
+        if crr_section is None:
+            return self._default
 
         return crr_section
 
@@ -86,8 +90,8 @@ class AppConfig(SingletonObject):
 
             self._cfg_guard.set()
 
-    def get(self, pattern: str, cast_to: type = str):
-        return ConfigValue(pattern, self, cast_to)
+    def get(self, pattern: str, default = None, cast_to: type = str):
+        return ConfigValue(pattern, self, default, cast_to)
 
     @property
     def config_hash(self):
