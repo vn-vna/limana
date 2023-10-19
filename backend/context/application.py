@@ -21,7 +21,6 @@ class Application(SingletonObject):
             format=configured_format)
 
     def start(self):
-        self._controller = AppController()
         self._argparser = argparse.ArgumentParser()
 
         self._argparser.add_argument(
@@ -41,6 +40,7 @@ class Application(SingletonObject):
 
         self._config = AppConfig(args.config_file)
         self._configure_logging()
+        self._controller = AppController()
 
         if args.env_list is not None:
             for env in args.env_list:

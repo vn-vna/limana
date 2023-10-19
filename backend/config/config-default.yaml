@@ -1,4 +1,7 @@
 # Path: backend/config/config-default.yaml
+server:
+  host: localhost
+  port: 8080
 
 database:
   mongodb:
