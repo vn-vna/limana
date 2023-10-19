@@ -1,5 +1,14 @@
 # Path: backend/config/config-default.yaml
 
-my:
-  config: $PYENV_HOME
+database:
+  mongodb:
+    host: localhost
+    port: 27017
+    username: ${MONGODB_USERNAME}
+    password: ${MONGODB_PASSWORD}
+    db_name: limana
 
+logging:
+  level: DEBUG
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  output: stdout
