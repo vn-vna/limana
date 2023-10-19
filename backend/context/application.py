@@ -37,7 +37,3 @@ class Application(SingletonObject):
                 os.environ[key] = value
 
         self._controller.run()
-
-
-if __name__ == "__main__":
-    Application().start()
