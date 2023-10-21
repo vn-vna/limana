@@ -18,6 +18,9 @@ class AppController(SingletonObject):
     def _init_flask_app(self):
         from route.home import home_blueprint
         self._flask_app.register_blueprint(blueprint=home_blueprint)
+        from route.lmao import lmao_blueprint
+        self._flask_app.register_blueprint(blueprint=lmao_blueprint)
+
 
     def run(self):
         waitress.serve(
