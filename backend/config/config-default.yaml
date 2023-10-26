@@ -4,13 +4,6 @@ server:
   port: 8080
 
 database:
-  mongodb:
-    host: localhost
-    port: 27017
-    username: ${MONGODB_USERNAME}
-    password: ${MONGODB_PASSWORD}
-    db_name: limana
-
   sqlite:
     dbloc: ./runtime/sqlite/database.db
     tables:
