@@ -1,0 +1,22 @@
+{
+  "editor.defaultFormatter": "ms-python.autopep8",
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "python.formatting.provider": "none",
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "sqltools.useNodeRuntime": true,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "database": "${workspaceFolder:limana}/backend/db/maps.db",
+      "name": "test"
+    }
+  ]
+}

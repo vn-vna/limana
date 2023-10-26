@@ -1,5 +1,21 @@
 import { createApp } from 'vue'
-import './style.css'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
+import testStore from '@/stores/test-store'
 
-createApp(App).mount('#app')
+
+const app = createApp(App)
+
+const routes = createRouter({
+  history: createWebHashHistory(),
+  routes: [
+    {
+      path: "/", component: () => import("@/pages/Home.vue")
+    }
+  ]
+})
+
+app.use(routes)
+app.use(testStore)
+
+app.mount("#app")

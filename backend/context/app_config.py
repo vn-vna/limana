@@ -49,6 +49,8 @@ class ConfigValue:
 
         crr_section = self._config.data
         for section in path:
+            if crr_section is None:
+                break
             crr_section = crr_section.get(section)
 
         if self._cast is not None:

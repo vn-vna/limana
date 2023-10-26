@@ -15,11 +15,23 @@ class AppController(SingletonObject):
 
         self._init_flask_app()
 
+        self._init_services()
+
     def _init_flask_app(self):
         from route.home import home_blueprint
-        self._flask_app.register_blueprint(blueprint=home_blueprint)
+        self._flask_app.register_blueprint(home_blueprint)
+
+        from route.authentication import auth_blueprint
+        self._flask_app.register_blueprint(auth_blueprint)
+
+    def _init_services(self):
+        from services.authentication_service import AuthenticationService
+
+        self._authentication_service = AuthenticationService()
 
     def run(self):
+        self._authentication_service.start()
+
         waitress.serve(
             app=self._flask_app, 
             host=self._host.value, 

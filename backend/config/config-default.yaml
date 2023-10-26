@@ -11,7 +11,17 @@ database:
     password: ${MONGODB_PASSWORD}
     db_name: limana
 
+  sqlite:
+    dbloc: ./runtime/sqlite/database.db
+    tables:
+      auth: _tbl_auth
+      session: _tbl_session
+
 logging:
   level: DEBUG
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
   output: stdout
+
+authentication:
+  cleanup_interval: 1d
+  token_alive: 3d
