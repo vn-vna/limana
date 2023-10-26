@@ -76,3 +76,33 @@ def login():
         "message": "Login successful",
         "sessionid": sessionid
     }, 200
+
+
+@cross_origin()
+@auth_blueprint.route("/api/auth/check", methods=["GET"])
+def check():
+    auth = AuthenticationService()
+
+    sessionid = request.headers.get("Limana-SessionID")
+    username = request.headers.get("Limana-Username")
+
+    if not sessionid or not username:
+        return {
+            "success": False,
+            "message": "Session ID and username are required",
+        }, 400
+    
+    userid = auth.authorize_session(username, sessionid)
+
+    if not userid:
+        return {
+            "success": False,
+            "message": "Invalid session ID or username",
+        }, 401
+    
+    return {
+        "success": True,
+        "message": "Session authorized",
+        "userid": userid,
+        "form_data": request.form
+    }, 200

@@ -81,11 +81,16 @@ SQL_GET_USER_HASHED_PASSWORD = """
 
 SQL_GET_USERID_BY_SESSION = """
     SELECT 
-        userid 
+        {session_table}.userid,
+        {session_table}.sessionid
     FROM 
-        {session_table} 
-    WHERE 
-        sessionid = ? AND expiration > DATETIME('now');
+        {auth_table}
+    LEFT OUTER JOIN
+        {session_table}
+    ON 
+        {auth_table}.userid = {session_table}.userid
+    WHERE
+        {session_table}.sessionid = ? AND {auth_table}.username = ?;
 """
 
 SQL_CLEANUP_SESSION = """
@@ -149,24 +154,31 @@ class AuthenticationService(app_context.AppService):
             cursor.execute(
                 SQL_INSERT_NEW_USER.format(
                     auth_table=self.db.authdb_name.value),
-                [userid, user_data["username"], hashed_password,
-                 user_data["firstname"], user_data["lastname"],
-                 user_data["address"], user_data["phonenum"],
-                 user_data["userrole"]]
+                [
+                    userid,
+                    user_data["username"],
+                    hashed_password,
+                    user_data["firstname"],
+                    user_data["lastname"],
+                    user_data["address"],
+                    user_data["phonenum"],
+                    user_data["userrole"]
+                ]
             )
             self.db.connection.commit()
 
     def login(self, username: str, password: str):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(
-                SQL_GET_USER_HASHED_PASSWORD.format(auth_table=self.db.authdb_name.value),
+                SQL_GET_USER_HASHED_PASSWORD.format(
+                    auth_table=self.db.authdb_name.value),
                 [username])
 
             data = cursor.fetchone()
 
             if not data:
                 return None
-            
+
             userid, user_password = data
 
             hashed_password = self._hash_password(username, password)
@@ -186,14 +198,23 @@ class AuthenticationService(app_context.AppService):
 
             return sessionid
 
-    def authorize_session(self, sessionid: str):
+    def authorize_session(self, username: str, sessionid: str):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(
                 SQL_GET_USERID_BY_SESSION.format(
-                    session_table=self.db.sessiondb_name.value),
-                [sessionid])
+                    session_table=self.db.sessiondb_name.value,
+                    auth_table=self.db.authdb_name.value),
+                [sessionid, username]
+            )
 
-            return cursor.fetchone()
+            data = cursor.fetchone()
+
+            if not data:
+                return None
+            
+            userid, sessionid = data
+
+            return userid
 
     def _hash_password(self, username: str, password: str):
         return hashlib.sha256(f"{username}:{password}".encode("utf-8")).hexdigest()
