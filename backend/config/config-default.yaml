@@ -9,6 +9,7 @@ database:
     tables:
       auth: _tbl_auth
       session: _tbl_session
+      book: _tbl_book
 
 logging:
   level: DEBUG

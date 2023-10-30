@@ -20,8 +20,10 @@ class SqliteClient(SingletonObject):
 
         self._connections = {}
 
+        # Define table names
         self.authdb_name = self._config.get("database::sqlite::tables::auth")
         self.sessiondb_name = self._config.get("database::sqlite::tables::session")
+        self.bookdb_name = self._config.get("database::sqlite::tables::book")
 
     def get_cursor(self) -> sqlite3.Cursor:
         return self.connection.cursor()

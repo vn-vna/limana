@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
-import testStore from '@/stores/test-store'
+import testStore from '@/stores/store'
 
 
 const app = createApp(App)
@@ -18,4 +18,4 @@ const routes = createRouter({
 app.use(routes)
 app.use(testStore)
 
-app.mount("#app")
+app.mount(document.getElementById("app")!)

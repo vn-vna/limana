@@ -18,5 +18,6 @@
       "database": "${workspaceFolder:limana}/backend/db/maps.db",
       "name": "test"
     }
-  ]
+  ],
+  "window.zoomLevel": -1
 }
