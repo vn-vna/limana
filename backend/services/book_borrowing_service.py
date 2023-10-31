@@ -11,6 +11,7 @@ SQL_CREATE_BORROW_INFO = """
         bookid      CHAR(30)        NOT NULL,
         borrow_date DATETIME        NOT NULL,
         return_date DATETIME        NOT NULL,
+        user_return_date    DATETIME NULL,
         FOREIGN KEY (userid) REFERENCES {auth_table}(userid),
         FOREIGN KEY (bookid) REFERENCES {book_table}(bookid)
     );
@@ -23,15 +24,13 @@ SQL_INSERT_NEW_BORROW_INFO = """
             userid,
             bookid,
             borrow_date,
-            return_date
+            return_date,
+            user_return_date 
         )
     VALUES
-        (?, ?, ?, DATETIME('now'), DATETIME('now', '+{borrow_time} seconds'));
+        (?, ?, ?, DATETIME('now'), DATETIME('now', '+{borrow_time} seconds'), NULL);
 """
 
-SQL_DELETE_BORROW_INFO = """
-    DELETE FROM {borrow_table} WHERE borrowid = ?;
-"""
 SQL_EXTENDS_BORROW_TIME = """
     UPDATE {borrow_table} SET
         return_date = DATETIME(return_date, '+{extend_time} seconds')
@@ -69,12 +68,6 @@ class BookBorrowingService(app_context.AppService):
                 bookid,
             ))
             self.db.connection.commit()
-
-    def delete_borrow(self, borrow_info):
-        with contextlib.closing(self.db.get_cursor()) as cursor:
-            cursor.execute(SQL_DELETE_BORROW_INFO.format(
-                borrow_table=self.db.borrowdb_name.value
-            ), (borrow_info.get("borrowid"),))
 
     def extends_borrow_time(self, borrowid, extend_time):
         with contextlib.closing(self.db.get_cursor()) as cursor:

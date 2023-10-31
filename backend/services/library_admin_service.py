@@ -2,6 +2,7 @@ import contextlib
 
 from context import app_context
 from clients.sqlite_client import SqliteClient
+import uuid
 
 SQL_CREATE_BOOK_TABLE = """ 
     CREATE TABLE IF NOT EXISTS {book_table} (
@@ -65,6 +66,19 @@ SQL_INSERT_NEW_AUTHOR = """
         (?, ?, ?, ?, ?);
 """
 
+SQL_DELETE_AUTHOR = """
+    DELETE FROM {author_table} WHERE authorid = ?;
+"""
+SQL_UPDATE_AUTHOR = """
+    UPDATE {author_table} SET
+        firstname = ?,
+        lastname = ?,
+        address = ?,
+        phonenum = ?
+    WHERE  
+        authorid = ?;
+"""
+
 SQL_CREATE_NEW_PUBLISHER = """
     CREATE TABLE IF NOT EXISTES {publisher_table} (
         publisherid CHAR(30)        PRIMARY KEY,
@@ -79,6 +93,15 @@ SQL_INSERT_NEW_PUBLISHER = """
     )
     VALUES
         (?, ?);
+"""
+SQL_DELETE_PUBLISHER = """
+    DELETE FROM {publisher_table} WHERE publisherid = ?;
+"""
+SQL_UPDATE_PUBLISHER = """
+    UPDATE {publisher_table} SET
+        name = ?
+    WHERE   
+        publisherid = ?;
 """
 
 
@@ -104,10 +127,11 @@ class LibraryAdminService(app_context.AppService):
 
     def add_book(self, book):
         with contextlib.closing(self.db.get_cursor()) as cursor:
+            bookid = uuid.uuid4().hex
             cursor.execute(SQL_INSERT_NEW_BOOK.format(
                 book_table=self.db.bookdb_name.value
             ), (
-                book.get("bookid"),
+                bookid,
                 book.get("title"),
                 book.get("authorname"),
                 book.get("publisher"),
@@ -132,10 +156,11 @@ class LibraryAdminService(app_context.AppService):
 
     def add_author(self, author: dict):
         with contextlib.closing(self.db.get_cursor()) as cursor:
+            authorid = uuid.uuid4().hex
             cursor.execute(SQL_INSERT_NEW_AUTHOR.format(
                 author_table=self.db.authordb_name.value
             ), (
-                author.get("authorid"),
+                authorid,
                 author.get("firstname"),
                 author.get("lastname"),
                 author.get("address"),
@@ -144,16 +169,45 @@ class LibraryAdminService(app_context.AppService):
             self.db.connection.commit()
 
     def remove_author(self, author):
-        raise NotImplementedError()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_DELETE_AUTHOR.format(
+                author_table=self.db.authordb_name.value
+            ), (author.get("authorid"),))
 
     def update_author(self, author):
-        raise NotImplementedError()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_UPDATE_AUTHOR.format(
+                author_table=self.db.authordb_name.value
+            ), (
+                author.get("firstname"),
+                author.get("lastname"),
+                author.get("address"),
+                author.get("phonenum"),
+                author.get("authorid")
+            ))
 
     def add_publisher(self, publisher):
-        raise NotImplementedError()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            publisherid = uuid.uuid4().hex
+            cursor.execute(SQL_INSERT_NEW_PUBLISHER.format(
+                publisher_table=self.db.publisher_name.value
+            ), (
+                publisherid,
+                publisher.get("name")
+            ))
+            self.db.connection.commit()
 
     def remove_publisher(self, publisher):
-        raise NotImplementedError()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_DELETE_PUBLISHER.format(
+                publisher_table=self.db.publisher_name.value
+            ), (publisher.get("publisherid"),))
 
     def update_publisher(self, publisher):
-        raise NotImplementedError()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_UPDATE_PUBLISHER.format(
+                publisher_table=self.db.publisher_name.value
+            ), (
+                publisher.get("name"),
+                publisher.get("publisherid")
+            ))
