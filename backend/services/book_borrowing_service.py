@@ -3,14 +3,15 @@ import contextlib
 from clients.sqlite_client import SqliteClient
 
 SQL_CREATE_BORROW_INFO = """
-    borrowid    CHAR(30)        PRIMARY KEY,
-    userid      CHAR(30)        NOT NULL,
-    bookid      CHAR(30)        NOT NULL,
-    borrow_date DATETIME        NOT NULL,
-    return_date DATETIME        NOT NULL,
-    FOREIGN KEY (userid) REFERENCES {auth_table}(userid),
-    FOREIGN KEY (bookid) REFERENCES {book_table}(bookid)
-);
+    CREATE TABLE IF NOT EXISTS {borrow_table} (
+        borrowid    CHAR(30)        PRIMARY KEY,
+        userid      CHAR(30)        NOT NULL,
+        bookid      CHAR(30)        NOT NULL,
+        borrow_date DATETIME        NOT NULL,
+        return_date DATETIME        NOT NULL,
+        FOREIGN KEY (userid) REFERENCES {auth_table}(userid),
+        FOREIGN KEY (bookid) REFERENCES {book_table}(bookid)
+    );
 """
 
 SQL_INSERT_NEW_BORROW_INFO = """
