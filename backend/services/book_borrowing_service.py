@@ -1,6 +1,8 @@
 from context import app_context
 import contextlib
 from clients.sqlite_client import SqliteClient
+import uuid
+from pytimeparse import parse as parse_time
 
 SQL_CREATE_BORROW_INFO = """
     CREATE TABLE IF NOT EXISTS {borrow_table} (
@@ -24,18 +26,15 @@ SQL_INSERT_NEW_BORROW_INFO = """
             return_date
         )
     VALUES
-        (?, ?, ?, ?, ?);
+        (?, ?, ?, DATETIME('now'), DATETIME('now', '+{borrow_time} seconds'));
 """
 
 SQL_DELETE_BORROW_INFO = """
     DELETE FROM {borrow_table} WHERE borrowid = ?;
 """
-SQL_UPDATE_BORROW_INFO = """
+SQL_EXTENDS_BORROW_TIME = """
     UPDATE {borrow_table} SET
-        userid = ?,
-        bookid = ?,
-        borrow_date = ?,
-        return_date = ?
+        return_date = DATETIME(return_date, '+{extend_time} seconds')
     WHERE
         borrowid = ?;
 """
@@ -45,6 +44,8 @@ class BookBorrowingService(app_context.AppService):
     def __init__(self):
         super().__init__()
         self.db = SqliteClient()
+        self._borrow_time = self._config.get(
+            "library::borrow_time", default="10d")
 
     def start(self):
         with contextlib.closing(self.db.get_connection()) as cursor:
@@ -56,16 +57,16 @@ class BookBorrowingService(app_context.AppService):
     def stop(self):
         pass
 
-    def borrow_book(self, borrow_info):
+    def borrow_book(self, userid, bookid):
         with contextlib.closing(self.db.get_cursor()) as cursor:
+            borrowid = uuid.uuid4().hex
             cursor.execute(SQL_INSERT_NEW_BORROW_INFO.format(
-                borrow_table=self.db.borrowdb_name.value
+                borrow_table=self.db.borrowdb_name.value,
+                borrow_time=parse_time(self._borrow_time.value)
             ), (
-                borrow_info.get("borrowid"),
-                borrow_info.get("userid"),
-                borrow_info.get("bookid"),
-                borrow_info.get("borrow_date"),
-                borrow_info.get("return_date")
+                borrowid,
+                userid,
+                bookid,
             ))
             self.db.connection.commit()
 
@@ -75,8 +76,12 @@ class BookBorrowingService(app_context.AppService):
                 borrow_table=self.db.borrowdb_name.value
             ), (borrow_info.get("borrowid"),))
 
-    def update_borrow(self, borrow_info):
+    def extends_borrow_time(self, borrowid, extend_time):
         with contextlib.closing(self.db.get_cursor()) as cursor:
-            cursor.execute(SQL_UPDATE_BORROW_INFO.format(
-                borrow_table=self.db.borrowdb_name.value
-            ), (borrow_info.get("borrowid")))
+            cursor.execute(SQL_EXTENDS_BORROW_TIME.format(
+                borrow_table=self.db.borrowdb_name.value,
+                extend_time=parse_time(extend_time)
+            ), (
+                borrowid,
+            ))
+            self.db.connection.commit()
