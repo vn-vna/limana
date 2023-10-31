@@ -22,8 +22,11 @@ class SqliteClient(SingletonObject):
 
         # Define table names
         self.authdb_name = self._config.get("database::sqlite::tables::auth")
-        self.sessiondb_name = self._config.get("database::sqlite::tables::session")
+        self.sessiondb_name = self._config.get(
+            "database::sqlite::tables::session")
         self.bookdb_name = self._config.get("database::sqlite::tables::book")
+        self.publisher_name = self._config.get(
+            "database::sqlite::tables::publisher")
 
     def get_cursor(self) -> sqlite3.Cursor:
         return self.connection.cursor()
@@ -32,7 +35,8 @@ class SqliteClient(SingletonObject):
     def connection(self) -> sqlite3.Connection:
         with self._lock:
             if current_thread().name not in self._connections:
-                self._connections[current_thread().name] = sqlite3.connect(self._db_uri)
+                self._connections[current_thread().name] = sqlite3.connect(
+                    self._db_uri)
 
             return self._connections[current_thread().name]
 
@@ -40,4 +44,3 @@ class SqliteClient(SingletonObject):
         with self._lock:
             for connection in self._connections.values():
                 connection.close()
-
