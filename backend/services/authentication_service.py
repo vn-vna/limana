@@ -121,27 +121,31 @@ class AuthenticationService(app_context.AppService):
         self.db = SqliteClient()
 
     def start(self):
-        cursor = self.db.get_cursor()
-        cursor.execute(
-            SQL_CREATE_AUTH_TABLE.format(auth_table=self.db.authdb_name.value),
-        )
-        cursor.execute(
-            SQL_CREATE_SESSION_TABLE.format(
-                session_table=self.db.sessiondb_name.value,
-                auth_table=self.db.authdb_name.value),
-        )
-        self.db.connection.commit()
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(
+                SQL_CREATE_AUTH_TABLE.format(
+                    auth_table=self.db.authdb_name.value
+                ),
+            )
+            cursor.execute(
+                SQL_CREATE_SESSION_TABLE.format(
+                    session_table=self.db.sessiondb_name.value,
+                    auth_table=self.db.authdb_name.value),
+            )
+            self.db.connection.commit()
 
         self._cleanup_thread.start()
 
     def stop(self):
-        self.db.destroy()
+        pass
 
     def create_user(self, user_data: dict):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(
                 SQL_GET_USER.format(auth_table=self.db.authdb_name.value),
-                [user_data["username"]]
+                [
+                    user_data["username"],
+                ]
             )
 
             if cursor.fetchone():
@@ -211,7 +215,7 @@ class AuthenticationService(app_context.AppService):
 
             if not data:
                 return None
-            
+
             userid, sessionid = data
 
             return userid
