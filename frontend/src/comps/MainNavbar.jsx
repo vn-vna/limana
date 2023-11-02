@@ -74,7 +74,6 @@ function NavBarContainer() {
           </Bootstrap.Navbar.Collapse>
         </Bootstrap.Container>
       </Bootstrap.Navbar>
-
     </>
   )
 }

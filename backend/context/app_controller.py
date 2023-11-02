@@ -24,13 +24,19 @@ class AppController(SingletonObject):
         from route.authentication import auth_blueprint
         self._flask_app.register_blueprint(auth_blueprint)
 
+        from route.userdata import userdata_blueprint
+        self._flask_app.register_blueprint(userdata_blueprint)
+
     def _init_services(self):
         from services.authentication_service import AuthenticationService
+        from services.useradata_service import UserDataService
 
         self._authentication_service = AuthenticationService()
+        self._userdata_service = UserDataService()
 
     def run(self):
         self._authentication_service.start()
+        self._userdata_service.start()
 
         waitress.serve(
             app=self._flask_app, 

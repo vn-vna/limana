@@ -18,6 +18,7 @@ SQL_CREATE_AUTH_TABLE = """
         lastname    NVARCHAR(50),
         address     NVARCHAR(255),
         phonenum    CHAR(12),
+        birthdate   DATE,
         userrole    CHAR(5)
     );
 """
@@ -42,10 +43,11 @@ SQL_INSERT_NEW_USER = """
             lastname, 
             address, 
             phonenum, 
+            birthdate,
             userrole
         ) 
     VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?);
+        (?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 
 SQL_INSERT_NEW_SESSION = """
@@ -162,6 +164,7 @@ class AuthenticationService(app_context.AppService):
                     user_data["lastname"],
                     user_data["address"],
                     user_data["phonenum"],
+                    user_data["birthdate"],
                     user_data["userrole"]
                 ]
             )

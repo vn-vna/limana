@@ -34,6 +34,7 @@ def sign_up():
             "lastname": lastname,
             "address": address,
             "phonenum": phonenum,
+            "birthdate": birthdate,
             "userrole": "user"
         })
 

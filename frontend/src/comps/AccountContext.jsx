@@ -8,9 +8,12 @@ export function useAccount() {
 
 export default function AccountProvider({ children }) {
   const [sessionToken, setSessionToken] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   return <AccountContext.Provider value={{
     sessionToken,
-    setSessionToken
+    userData,
+    setSessionToken,
+    setUserData
   }}>{children}</AccountContext.Provider>;
 }
