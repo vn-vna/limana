@@ -1,16 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams, useMatch } from 'react-router-dom';
+import { createContext, useEffect, useState, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import * as Bootstrap from 'react-bootstrap';
 import classnames from 'classnames';
 import LoginModal from '$/comps/LoginModal';
 import SignupModal from '$/comps/SignUpModal';
+import ForgotPasswordModal from '$/comps/ForgotPasswordModal';
 
-import '$/views/MainNavbar.scss';
+import '$/comps/MainNavbar.scss';
 
-export default function MainNavbar() {
+const ModalControlContext = createContext({})
 
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
+export function useModalControl() {
+  return useContext(ModalControlContext)
+}
+
+function NavBarContainer() {
+
+  const { setShowLoginModal, setShowSignupModal } = useModalControl()
 
   return (
     <>
@@ -47,14 +53,39 @@ export default function MainNavbar() {
         </Bootstrap.Container>
       </Bootstrap.Navbar>
 
-      <LoginModal
-        show={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        openSignUp={() => setShowSignupModal(true)} />
-      <SignupModal
-        show={showSignupModal}
-        onClose={() => setShowSignupModal(false)}
-        openLogIn={() => setShowLoginModal(true)} />
+    </>
+  )
+}
+
+function ModalContainer() {
+  return (
+    <>
+      <LoginModal />
+      <SignupModal />
+      <ForgotPasswordModal />
+    </>
+  )
+}
+
+export default function MainNavbar() {
+
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+
+  return (
+    <>
+      <ModalControlContext.Provider value={{
+        showLoginModal,
+        showSignupModal,
+        showForgotPasswordModal,
+        setShowForgotPasswordModal,
+        setShowLoginModal,
+        setShowSignupModal
+      }}>
+        <NavBarContainer />
+        <ModalContainer />
+      </ModalControlContext.Provider>
     </>
   )
 }

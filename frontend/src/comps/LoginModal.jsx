@@ -1,43 +1,97 @@
+import { Formik } from 'formik';
 import * as Bootstrap from 'react-bootstrap';
+import * as yup from 'yup';
+import axios from 'axios';
 
-export default function LoginModal({ show, onClose, openSignUp }) {
+import { useModalControl } from '$/comps/MainNavbar';
+import EmailInput from '$/comps/EmailInput';
+import PasswordInput from '$/comps/PasswordInput';
+
+export default function LoginModal() {
+  const validationSchema = yup.object({
+    email: yup.string().email().required(),
+    password: yup.string().min(8).required(),
+  })
+
+  const { showLoginModal, setShowLoginModal, setShowSignupModal, setShowForgotPasswordModal } = useModalControl()
+
   return (
     <>
-      <Bootstrap.Modal show={show} centered>
-        <Bootstrap.Modal.Header>
-          <Bootstrap.Modal.Title>Login</Bootstrap.Modal.Title>
-          <Bootstrap.CloseButton onClick={onClose} />
-        </Bootstrap.Modal.Header>
+      <Formik
+        validationSchema={validationSchema}
+        initialValues={{
+          email: "",
+          password: "",
+        }}
+        onSubmit={async (values) => {
+          const formData = new FormData()
+          formData.append('email', values.email)
+          formData.append('password', values.password)
 
-        <Bootstrap.Modal.Body>
-          <Bootstrap.Form>
-            <Bootstrap.Form.Group className="mb-3" controlId="login-email">
-              <Bootstrap.Form.FloatingLabel controlId="floatingEmailInput" label="Email">
-                <Bootstrap.Form.Control type="email" placeholder="Enter email" />
-              </Bootstrap.Form.FloatingLabel>
-            </Bootstrap.Form.Group>
+          axios({
+            method: 'post',
+            url: '/api/auth/login',
+            data: formData,
+            headers: { 'Content-Type': 'multipart/form-data' }
+          }).then((response) => {
+            console.log(response)
+          }).catch((error) => {
+            console.log(error)
+          })
+        }}>
+        {({ handleSubmit, handleChange, values, touched, errors, handleBlur }) => (
+          <Bootstrap.Modal show={showLoginModal} centered>
+            <Bootstrap.Modal.Header>
+              <Bootstrap.Modal.Title>Login</Bootstrap.Modal.Title>
+              <Bootstrap.CloseButton onClick={() => {
+                setShowLoginModal(false)
+              }} />
+            </Bootstrap.Modal.Header>
 
-            <Bootstrap.Form.Group className="mb-3" controlId="login-password">
-              <Bootstrap.Form.FloatingLabel controlId="floatingPasswordInput" label="Password">
-                <Bootstrap.Form.Control type="password" placeholder="Password" />
-              </Bootstrap.Form.FloatingLabel>
-            </Bootstrap.Form.Group>
-          </Bootstrap.Form>
+            <Bootstrap.Modal.Body>
+              <Bootstrap.Form>
+                <EmailInput
+                  id="email"
+                  value={values.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  isValid={touched.email && values.email && !errors.email}
+                  isInvalid={touched.email && !!errors.email}
+                  overlay="Enter here the email you registered" />
 
-        </Bootstrap.Modal.Body>
+                <PasswordInput
+                  id="password"
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  isValid={touched.password && values.password && !errors.password}
+                  isInvalid={touched.password && !!errors.password}
+                  overlay="Enter here the password you registered" />
+              </Bootstrap.Form>
 
-        <Bootstrap.Modal.Footer>
-          <Bootstrap.Form.Text className="text-muted">
-            Don't have an account? <a href="#" onClick={() => {
-              onClose()
-              openSignUp()
-            }}>Sign up</a>
-          </Bootstrap.Form.Text>
-          <Bootstrap.Button variant="primary" type="submit">
-            Get in
-          </Bootstrap.Button>
-        </Bootstrap.Modal.Footer>
-      </Bootstrap.Modal>
+              <Bootstrap.Form.Text className="text-muted">
+                Forgot your password? <a href="#" onClick={() => {
+                  setShowLoginModal(false)
+                  setShowForgotPasswordModal(true)
+                }}>Reset it</a>
+              </Bootstrap.Form.Text>
+
+            </Bootstrap.Modal.Body>
+
+            <Bootstrap.Modal.Footer>
+              <Bootstrap.Form.Text className="text-muted">
+                Don't have an account? <a href="#" onClick={() => {
+                  setShowLoginModal(false)
+                  setShowSignupModal(true)
+                }}>Sign up</a>
+              </Bootstrap.Form.Text>
+              <Bootstrap.Button variant="primary" type="submit" onClick={handleSubmit}>
+                Get in
+              </Bootstrap.Button>
+            </Bootstrap.Modal.Footer>
+          </Bootstrap.Modal>
+        )}
+      </Formik>
     </>
   )
 }
