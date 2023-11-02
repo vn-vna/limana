@@ -2,9 +2,11 @@ import { createContext, useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import * as Bootstrap from 'react-bootstrap';
 import classnames from 'classnames';
+
 import LoginModal from '$/comps/LoginModal';
 import SignupModal from '$/comps/SignUpModal';
 import ForgotPasswordModal from '$/comps/ForgotPasswordModal';
+import { useAccount } from '$/comps/AccountContext';
 
 import '$/comps/MainNavbar.scss';
 
@@ -17,6 +19,11 @@ export function useModalControl() {
 function NavBarContainer() {
 
   const { setShowLoginModal, setShowSignupModal } = useModalControl()
+  const { sessionToken } = useAccount()
+
+  useEffect(() => {
+    if (!sessionToken) return
+  }, [sessionToken])
 
   return (
     <>
@@ -41,14 +48,29 @@ function NavBarContainer() {
           </Bootstrap.Navbar.Collapse>
 
           <Bootstrap.Navbar.Collapse className="justify-content-end">
-            <Bootstrap.Nav>
-              <Bootstrap.Nav.Item>
-                <Bootstrap.Nav.Link onClick={() => setShowLoginModal(true)}>Login</Bootstrap.Nav.Link>
-              </Bootstrap.Nav.Item>
-              <Bootstrap.Nav.Item>
-                <Bootstrap.Nav.Link onClick={() => setShowSignupModal(true)}>Register</Bootstrap.Nav.Link>
-              </Bootstrap.Nav.Item>
-            </Bootstrap.Nav>
+            {
+              sessionToken ?
+                (
+                  <Bootstrap.Nav>
+                    <Bootstrap.Nav.Item>
+                      <Bootstrap.Nav.Link>Account</Bootstrap.Nav.Link>
+                    </Bootstrap.Nav.Item>
+                    <Bootstrap.Nav.Item>
+                      <Bootstrap.Nav.Link>Logout</Bootstrap.Nav.Link>
+                    </Bootstrap.Nav.Item>
+                  </Bootstrap.Nav>
+                ) : (
+
+                  <Bootstrap.Nav>
+                    <Bootstrap.Nav.Item>
+                      <Bootstrap.Nav.Link onClick={() => setShowLoginModal(true)}>Login</Bootstrap.Nav.Link>
+                    </Bootstrap.Nav.Item>
+                    <Bootstrap.Nav.Item>
+                      <Bootstrap.Nav.Link onClick={() => setShowSignupModal(true)}>Register</Bootstrap.Nav.Link>
+                    </Bootstrap.Nav.Item>
+                  </Bootstrap.Nav>
+                )
+            }
           </Bootstrap.Navbar.Collapse>
         </Bootstrap.Container>
       </Bootstrap.Navbar>

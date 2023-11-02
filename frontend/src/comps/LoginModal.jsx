@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Formik } from 'formik';
 import * as Bootstrap from 'react-bootstrap';
 import * as yup from 'yup';
 import axios from 'axios';
 
 import { useModalControl } from '$/comps/MainNavbar';
+import { useAccount } from '$/comps/AccountContext';
 import EmailInput from '$/comps/EmailInput';
 import PasswordInput from '$/comps/PasswordInput';
 
@@ -14,6 +16,9 @@ export default function LoginModal() {
   })
 
   const { showLoginModal, setShowLoginModal, setShowSignupModal, setShowForgotPasswordModal } = useModalControl()
+  const { setSessionToken } = useAccount()
+
+  const [lastError, setLastError] = useState(null)
 
   return (
     <>
@@ -28,16 +33,24 @@ export default function LoginModal() {
           formData.append('email', values.email)
           formData.append('password', values.password)
 
-          axios({
-            method: 'post',
-            url: '/api/auth/login',
-            data: formData,
-            headers: { 'Content-Type': 'multipart/form-data' }
-          }).then((response) => {
-            console.log(response)
-          }).catch((error) => {
+          try {
+            const response = await axios({
+              method: 'post',
+              url: '/api/auth/login',
+              data: formData,
+              headers: { 'Content-Type': 'multipart/form-data' }
+            })
+            console.log(response.data)
+
+            setSessionToken(response.data.sessionid)
+
+            setLastError(null)
+            setShowLoginModal(false)
+          }
+          catch (error) {
             console.log(error)
-          })
+            setLastError(error.response.data.message)
+          }
         }}>
         {({ handleSubmit, handleChange, values, touched, errors, handleBlur }) => (
           <Bootstrap.Modal show={showLoginModal} centered>
@@ -49,6 +62,13 @@ export default function LoginModal() {
             </Bootstrap.Modal.Header>
 
             <Bootstrap.Modal.Body>
+              {
+                lastError &&
+                <Bootstrap.Alert variant="danger">
+                  {lastError}
+                </Bootstrap.Alert>
+              }
+
               <Bootstrap.Form>
                 <EmailInput
                   id="email"

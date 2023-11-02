@@ -12,29 +12,29 @@ auth_blueprint = Blueprint("authentication", __name__)
 def sign_up():
     auth = AuthenticationService()
 
-    username = request.form.get("username")
+    email = request.form.get("email")
     password = request.form.get("password")
     firstname = request.form.get("firstname")
     lastname = request.form.get("lastname")
     address = request.form.get("address")
     phonenum = request.form.get("phonenum")
-    userrole = request.form.get("userrole")
+    birthdate = request.form.get("birthdate")
 
-    if not username or not password:
+    if not email or not password:
         return {
             "success": False,
-            "message": "Username and password are required",
+            "message": "Email and password are required",
         }, 400
 
     try:
         auth.create_user({
-            "username": username,
+            "email": email,
             "password": password,
             "firstname": firstname,
             "lastname": lastname,
             "address": address,
             "phonenum": phonenum,
-            "userrole": userrole
+            "userrole": "user"
         })
 
     except ValueError as e:
@@ -54,22 +54,22 @@ def sign_up():
 def login():
     auth = AuthenticationService()
 
-    username = request.form.get("username")
+    email = request.form.get("email")
     password = request.form.get("password")
 
-    if not username or not password:
+    if not email or not password:
         return {
             "success": False,
-            "message": "Username and password are required",
+            "message": "Email and password are required",
         }, 400
 
-    sessionid = auth.login(username, password)
+    sessionid = auth.login(email, password)
 
     if not sessionid:
         return {
             "success": False,
-            "message": "Invalid username or password",
-        }, 401
+            "message": "Invalid email or password",
+        }, 400
 
     return {
         "success": True,
@@ -84,25 +84,24 @@ def check():
     auth = AuthenticationService()
 
     sessionid = request.headers.get("Limana-SessionID")
-    username = request.headers.get("Limana-Username")
+    email = request.headers.get("Limana-UserEmail")
 
-    if not sessionid or not username:
+    if not sessionid or not email:
         return {
             "success": False,
-            "message": "Session ID and username are required",
+            "message": "Session ID and email are required",
         }, 400
     
-    userid = auth.authorize_session(username, sessionid)
+    userid = auth.authorize_session(email, sessionid)
 
     if not userid:
         return {
             "success": False,
-            "message": "Invalid session ID or username",
+            "message": "Invalid session ID or email",
         }, 401
     
     return {
         "success": True,
         "message": "Session authorized",
         "userid": userid,
-        "form_data": request.form
     }, 200
