@@ -70,6 +70,8 @@ class UserDataService(app_context.AppService):
             }
 
     def update_userdata(self, uid, userdata):
+        print(userdata)
+        
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(
                 SQL_UPDATE_USER_DATA.format(

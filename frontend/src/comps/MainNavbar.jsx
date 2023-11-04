@@ -19,7 +19,7 @@ export function useModalControl() {
 function NavBarContainer() {
 
   const { setShowLoginModal, setShowSignupModal } = useModalControl()
-  const { sessionToken } = useAccount()
+  const { sessionToken, logout } = useAccount()
 
   useEffect(() => {
     if (!sessionToken) return
@@ -53,14 +53,15 @@ function NavBarContainer() {
                 (
                   <Bootstrap.Nav>
                     <Bootstrap.Nav.Item>
-                      <Bootstrap.Nav.Link>Account</Bootstrap.Nav.Link>
+                        <Link to="/account" className="nav-link">Account</Link>
                     </Bootstrap.Nav.Item>
                     <Bootstrap.Nav.Item>
-                      <Bootstrap.Nav.Link>Logout</Bootstrap.Nav.Link>
+                      <Bootstrap.Nav.Link onClick={() => {
+                        logout()
+                      }}>Logout</Bootstrap.Nav.Link>
                     </Bootstrap.Nav.Item>
                   </Bootstrap.Nav>
                 ) : (
-
                   <Bootstrap.Nav>
                     <Bootstrap.Nav.Item>
                       <Bootstrap.Nav.Link onClick={() => setShowLoginModal(true)}>Login</Bootstrap.Nav.Link>

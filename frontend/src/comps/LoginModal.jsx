@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
 import * as Bootstrap from 'react-bootstrap';
 import * as yup from 'yup';
@@ -16,7 +17,8 @@ export default function LoginModal() {
   })
 
   const { showLoginModal, setShowLoginModal, setShowSignupModal, setShowForgotPasswordModal } = useModalControl()
-  const { setSessionToken } = useAccount()
+  const { setSessionToken, setUserEmail } = useAccount()
+  const navigate = useNavigate()
 
   const [lastError, setLastError] = useState(null)
 
@@ -43,9 +45,12 @@ export default function LoginModal() {
             console.log(response.data)
 
             setSessionToken(response.data.sessionid)
+            setUserEmail(values.email)
 
             setLastError(null)
             setShowLoginModal(false)
+
+            navigate('/account')
           }
           catch (error) {
             console.log(error)
