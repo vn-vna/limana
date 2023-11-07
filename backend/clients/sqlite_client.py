@@ -22,6 +22,8 @@ class SqliteClient(SingletonObject):
 
         # Define table names
         self.authdb_name = self._config.get("database::sqlite::tables::auth")
+        self.authordb_name = self._config.get(
+            "database::sqlite::tables::author")
         self.sessiondb_name = self._config.get(
             "database::sqlite::tables::session")
         self.bookdb_name = self._config.get("database::sqlite::tables::book")
