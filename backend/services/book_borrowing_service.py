@@ -17,6 +17,28 @@ SQL_CREATE_BORROW_INFO = """
     );
 """
 
+SQL_GET_NOT_RETURNED_USER = """
+    SELECT 
+        *
+    FROM 
+        {borrow_table}
+    WHERE 
+        userid = ?
+    AND
+        user_return_date IS NULL;
+"""
+
+SQL_GET_BORROWED_COPIES = """ 
+    SELECT COUNT
+        bookid
+    FROM 
+        {borrow_table}
+    WHERE 
+        bookid = ?
+    AND
+        user_return_date IS NULL;
+""" 
+
 SQL_INSERT_NEW_BORROW_INFO = """
     INSERT INTO 
         {borrow_table} (
@@ -39,7 +61,7 @@ SQL_EXTENDS_BORROW_TIME = """
 """
 
 
-class BookBorrowingService(app_context.AppService):
+class BorrowingService(app_context.AppService):
     def __init__(self):
         super().__init__()
         self.db = SqliteClient()
@@ -47,7 +69,7 @@ class BookBorrowingService(app_context.AppService):
             "library::borrow_time", default="10d")
 
     def start(self):
-        with contextlib.closing(self.db.get_connection()) as cursor:
+        with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(SQL_CREATE_BORROW_INFO.format(
                 borrow_table=self.db.borrowdb_name.value,
             ))
@@ -55,8 +77,33 @@ class BookBorrowingService(app_context.AppService):
 
     def stop(self):
         pass
+    
+    def check_user_return(self, userid:str): #check if user has returned book
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_GET_NOT_RETURNED_USER.format(
+                borrow_table=self.db.borrowdb_name.value), 
+                (
+                userid,
+            ))
+            self.db.connection.commit()
+            if cursor.fetchone(): #if cursor got a data -> true?
+                return userid
+            if not cursor.fetchone():
+                return None
+            
 
-    def borrow_book(self, userid, bookid):
+    def check_book_availability(self, bookid:str):
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_GET_BORROWED_COPIES.format(
+                borrow_table=self.db.borrowdb_name.value
+                ), (
+                    bookid,    
+            )) 
+            self.db.connection.commit()
+            borrowed_copies = cursor.fetchone()  
+            return borrowed_copies
+
+    def borrow_book(self, userid:str, bookid:str):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             borrowid = uuid.uuid4().hex
             cursor.execute(SQL_INSERT_NEW_BORROW_INFO.format(
@@ -68,13 +115,18 @@ class BookBorrowingService(app_context.AppService):
                 bookid,
             ))
             self.db.connection.commit()
+            return borrowid
+            
 
-    def extends_borrow_time(self, borrowid, extend_time):
+    def extends_borrow_time(self, borrowid:str, extend_time, return_date):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(SQL_EXTENDS_BORROW_TIME.format(
                 borrow_table=self.db.borrowdb_name.value,
                 extend_time=parse_time(extend_time)
             ), (
                 borrowid,
+                return_date,
             ))
             self.db.connection.commit()
+            return return_date
+        
