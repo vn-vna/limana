@@ -144,7 +144,7 @@ class AuthenticationService(app_context.AppService):
                 [user_data["username"]]
             )
 
-            if cursor.fetchone():
+            if cursor.fetchone():  
                 raise ValueError("User already exists")
 
             userid = uuid.uuid4().hex

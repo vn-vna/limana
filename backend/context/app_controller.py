@@ -24,10 +24,17 @@ class AppController(SingletonObject):
         from route.authentication import auth_blueprint
         self._flask_app.register_blueprint(auth_blueprint)
 
+        from route.book_borrowing import book_borrowing_blueprint
+        self._flask_app.register_blueprint(book_borrowing_blueprint)
+
     def _init_services(self):
         from services.authentication_service import AuthenticationService
 
         self._authentication_service = AuthenticationService()
+
+        from services.book_borrowing_service import BorrowingService
+
+        self._book_borrowing_service = BorrowingService()
 
     def run(self):
         self._authentication_service.start()
@@ -36,3 +43,12 @@ class AppController(SingletonObject):
             app=self._flask_app, 
             host=self._host.value, 
             port=self._port.value)
+        
+        self._book_borrowing_service.start()
+
+        waitress.serve(
+            app=self._flask_app, 
+            host=self._host.value, 
+            port=self._port.value)
+
+
