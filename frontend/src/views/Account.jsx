@@ -34,7 +34,8 @@ function InspectViewItem({ label, editable, editMode, ...props }) {
 function AccountInspectView({ userId }) {
 
   const [editMode, setEditMode] = useState(false)
-  const [userData, setUserData] = useState(null)
+  const { userData, setUserData } = useAccount()
+
   const validationSchema = yup.object({
     firstname: yup.string().required(),
     lastname: yup.string().required(),
@@ -71,6 +72,7 @@ function AccountInspectView({ userId }) {
       {
         userData ? (
           <Formik
+            validationSchema={validationSchema}
             initialValues={{
               firstname: userData.firstname,
               lastname: userData.lastname,

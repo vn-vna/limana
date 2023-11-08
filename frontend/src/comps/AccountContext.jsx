@@ -12,6 +12,26 @@ export default function AccountProvider({ children }) {
   const [userEmail, setUserEmail] = useState(null);
   const [userData, setUserData] = useState(null);
 
+  const refreshUserData = () => {
+    if (!sessionToken || !userEmail) {
+      setUserData(null);
+      return;
+    }
+
+    axios({
+      method: "get",
+      url: "/api/userdata",
+      headers: {
+        "Limana-SessionId": sessionToken,
+        "Limana-UserEmail": userEmail
+      },
+    }).then((response) => {
+      setUserData(response.data.userdata);
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   useEffect(() => {
     if (localStorage.getItem("sessionToken")) {
       setSessionToken(localStorage.getItem("sessionToken"));
@@ -27,22 +47,7 @@ export default function AccountProvider({ children }) {
       localStorage.setItem("sessionToken", sessionToken);
       localStorage.setItem("userEmail", userEmail);
 
-
-      axios({
-        method: "get",
-        url: "/api/userdata",
-        headers: {
-          "Limana-SessionId": sessionToken,
-          "Limana-UserEmail": userEmail
-        },
-      })
-        .then((response) => {
-          console.log(response.data);
-          setUserData(response.data.userdata);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+      refreshUserData();
     }
   }, [sessionToken, userEmail]);
 
@@ -59,6 +64,7 @@ export default function AccountProvider({ children }) {
     sessionToken,
     userEmail,
     userData,
+    refreshUserData,
     logout,
     setSessionToken,
     setUserEmail,

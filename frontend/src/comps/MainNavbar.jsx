@@ -8,8 +8,6 @@ import SignupModal from '$/comps/SignUpModal';
 import ForgotPasswordModal from '$/comps/ForgotPasswordModal';
 import { useAccount } from '$/comps/AccountContext';
 
-import '$/comps/MainNavbar.scss';
-
 const ModalControlContext = createContext({})
 
 export function useModalControl() {
@@ -19,7 +17,7 @@ export function useModalControl() {
 function NavBarContainer() {
 
   const { setShowLoginModal, setShowSignupModal } = useModalControl()
-  const { sessionToken, logout } = useAccount()
+  const { sessionToken, userData, logout } = useAccount()
 
   useEffect(() => {
     if (!sessionToken) return
@@ -31,7 +29,7 @@ function NavBarContainer() {
         <Bootstrap.Container>
           <Bootstrap.Navbar.Brand>
             <Link to="/" className="navbar-brand">
-              <img src='/limana-icon.png' id="limana-icon-image" alt="Limana" />
+              <img src='/limana-icon.png' alt="Limana" width={50} height={50} />
             </Link>
           </Bootstrap.Navbar.Brand>
 
@@ -44,6 +42,34 @@ function NavBarContainer() {
                 <Link to="/" className="nav-link">Home</Link>
               </Bootstrap.Nav.Item>
 
+              {
+                sessionToken ?
+                  (
+                    <>
+                      <Bootstrap.Nav.Item>
+                        <Link to="/collection" className="nav-link">Collection</Link>
+                      </Bootstrap.Nav.Item>
+                    </>
+                  ) : null
+              }
+
+              {
+                userData && userData.role === 'admin' ?
+                  (
+                    <Bootstrap.NavDropdown title="Admin" id="admin-dropdown">
+                      <Bootstrap.NavDropdown.Item>
+                        <Link to="/admin/users" className="nav-link">Users</Link>
+                      </Bootstrap.NavDropdown.Item>
+                      <Bootstrap.NavDropdown.Item>
+                        <Link to="/admin/products" className="nav-link">Products</Link>
+                      </Bootstrap.NavDropdown.Item>
+                      <Bootstrap.NavDropdown.Item>
+                        <Link to="/admin/orders" className="nav-link">Orders</Link>
+                      </Bootstrap.NavDropdown.Item>
+                    </Bootstrap.NavDropdown>
+                  ) : null
+              }
+
             </Bootstrap.Nav>
           </Bootstrap.Navbar.Collapse>
 
@@ -53,7 +79,7 @@ function NavBarContainer() {
                 (
                   <Bootstrap.Nav>
                     <Bootstrap.Nav.Item>
-                        <Link to="/account" className="nav-link">Account</Link>
+                      <Link to="/account" className="nav-link">Account</Link>
                     </Bootstrap.Nav.Item>
                     <Bootstrap.Nav.Item>
                       <Bootstrap.Nav.Link onClick={() => {
