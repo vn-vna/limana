@@ -10,6 +10,7 @@ database:
       auth: _tbl_auth
       session: _tbl_session
       book: _tbl_book
+      author: _tbl_author
 
 logging:
   level: DEBUG
@@ -19,3 +20,6 @@ logging:
 authentication:
   cleanup_interval: 1d
   token_alive: 3d
+
+library:
+  borrow_time: 10d
