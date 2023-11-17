@@ -19,3 +19,6 @@ logging:
 authentication:
   cleanup_interval: 1d
   token_alive: 3d
+
+library:
+  borrow_time: 10d
