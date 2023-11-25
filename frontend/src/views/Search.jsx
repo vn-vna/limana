@@ -11,40 +11,66 @@ import { useAccount } from '../comps/AccountContext.jsx';
 
 function SearchResultsRow({ bookid, name, author, publisher, published }) {
   const { sessionToken, userEmail } = useAccount()
+  const [completeModal, setCompleteModal] = useState(false)
+  const [errorModal, setErrorModal] = useState(false)
+
+  const [lastError, setLastError] = useState(null)
 
   return (
-    <tr>
-      <td>{name}</td>
-      <td>{author}</td>
-      <td>{publisher}</td>
-      <td>{published}</td>
-      <td>
-        <Bootstrap.ButtonGroup>
-          <Bootstrap.Button
-            onClick={() => {
-              const formData = new FormData()
-              formData.append('bookid', bookid)
+    <>
+      <tr>
+        <td>{name}</td>
+        <td>{author}</td>
+        <td>{publisher}</td>
+        <td>{published}</td>
+        <td>
+          <Bootstrap.ButtonGroup>
+            <Bootstrap.Button
+              onClick={() => {
+                const formData = new FormData()
+                formData.append('bookid', bookid)
 
-              axios({
-                method: 'post',
-                url: '/api/borrowing',
-                headers: {
-                  "Limana-SessionID": sessionToken,
-                  "Limana-UserEmail": userEmail
-                },
-                data: formData
-              }).then((response) => {
-                console.log(response.data)
-              }).catch((error) => {
-                console.log(error)
-              })
-            }}
-            variant="success">
-            <BootstrapIcons.ArrowRight />
-          </Bootstrap.Button>
-        </Bootstrap.ButtonGroup>
-      </td>
-    </tr>
+                axios({
+                  method: 'post',
+                  url: '/api/borrowing',
+                  headers: {
+                    "Limana-SessionID": sessionToken,
+                    "Limana-UserEmail": userEmail
+                  },
+                  data: formData
+                }).then((response) => {
+                  setCompleteModal(true)
+                }).catch((error) => {
+                  setErrorModal(true)
+                  console.log(error)
+                  setLastError(error.response.data)
+                })
+              }}
+              variant="success">
+              <BootstrapIcons.ArrowRight />
+            </Bootstrap.Button>
+          </Bootstrap.ButtonGroup>
+        </td>
+      </tr>
+
+      <Bootstrap.Modal show={completeModal} onHide={() => setCompleteModal(false)}>
+        <Bootstrap.Modal.Header closeButton>
+          <Bootstrap.Modal.Title>Borrow Book</Bootstrap.Modal.Title>
+        </Bootstrap.Modal.Header>
+        <Bootstrap.Modal.Body>
+          Your request to borrow <strong>{name}</strong> has been sent to the librarian. 👌
+        </Bootstrap.Modal.Body>
+      </Bootstrap.Modal>
+
+      <Bootstrap.Modal show={errorModal} onHide={() => setErrorModal(false)}>
+        <Bootstrap.Modal.Header closeButton>
+          <Bootstrap.Modal.Title>Borrow Book</Bootstrap.Modal.Title>
+        </Bootstrap.Modal.Header>
+        <Bootstrap.Modal.Body>
+          Unfortunately. Your request has been denied since this error occured: <strong>{lastError?.message}</strong>
+        </Bootstrap.Modal.Body>
+      </Bootstrap.Modal>
+    </>
   )
 }
 

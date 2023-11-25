@@ -123,6 +123,16 @@ WHERE
     id = ?
 """
 
+SQL_CHECK_BORROW_OF_BOOK_BY_USER = """
+SELECT
+    COUNT(*)
+FROM
+    {borrow_table}
+WHERE
+    bookid = ? AND
+    userid = ?
+"""
+
 class BookBorrowingService(app_context.AppService):
     def __init__(self):
         super().__init__()
@@ -166,6 +176,18 @@ class BookBorrowingService(app_context.AppService):
     def request_borrow(self, user_id: str, book_id: str):
         borrow_id = str(uuid.uuid4())
         with contextlib.closing(self.db.get_cursor()) as cur:
+            cur.execute(
+                SQL_CHECK_BORROW_OF_BOOK_BY_USER.format(
+                    borrow_table=self.db.borrowdb_name.value
+                ),
+                (book_id, user_id)
+            )
+
+            count = cur.fetchone()[0]
+            
+            if count > 0:
+                raise ValueError("User already borrowed this book")
+            
             if self.get_remaining_instore(book_id) == 0:
                 raise ValueError("No more books in store")
 
