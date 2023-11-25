@@ -2,20 +2,36 @@ from flask import Blueprint, request
 
 from services.authentication_service import AuthenticationService
 from services.useradata_service import UserDataService
+from services.authorization_service import AuthorizationService
 
 userdata_blueprint = Blueprint("userdata", __name__)
 
+authorize = AuthorizationService()
 
-@userdata_blueprint.route("/api/userdata", methods=["GET"])
-def get_userdata():
 
-    auth = AuthenticationService()
+@userdata_blueprint.route("/api/userdata/all")
+@authorize.guard(role="admin")
+def get_all_users():
     udata = UserDataService()
 
-    email = request.headers.get("Limana-UserEmail")
-    sessionid = request.headers.get("Limana-SessionID")
+    users = udata.get_all_users()
 
-    uid = auth.authorize_session(email, sessionid)
+    return {
+        "success": True,
+        "message": "Users retrieved successfully",
+        "users": users
+    }, 200
+
+
+@userdata_blueprint.route("/api/userdata", methods=["GET"])
+@authorize.guard()
+def get_userdata():
+    udata = UserDataService()
+
+    try:
+        uid = get_userdata.auth.get("userid")
+    except AttributeError:
+        uid = None
 
     if not uid:
         return {
@@ -39,15 +55,14 @@ def get_userdata():
 
 
 @userdata_blueprint.route("/api/userdata", methods=["PUT"])
+@authorize.guard()
 def update_userdata():
-
-    auth = AuthenticationService()
     udata = UserDataService()
 
-    email = request.headers.get("Limana-UserEmail")
-    sessionid = request.headers.get("Limana-SessionID")
-
-    uid = auth.authorize_session(email, sessionid)
+    try:
+        uid = update_userdata.auth.get("userid")
+    except AttributeError:
+        uid = None
 
     if not uid:
         return {

@@ -2,9 +2,12 @@ from flask import Blueprint, request
 from flask_cors import cross_origin
 
 from services.authentication_service import AuthenticationService
+from services.authorization_service import AuthorizationService
 from models.user import UserModel
 
 auth_blueprint = Blueprint("authentication", __name__)
+
+authorize = AuthorizationService()
 
 
 @cross_origin()
@@ -81,28 +84,11 @@ def login():
 
 @cross_origin()
 @auth_blueprint.route("/api/auth/check", methods=["GET"])
+@authorize.guard(role="admin")
 def check():
-    auth = AuthenticationService()
+    print(check.__name__)
 
-    sessionid = request.headers.get("Limana-SessionID")
-    email = request.headers.get("Limana-UserEmail")
-
-    if not sessionid or not email:
-        return {
-            "success": False,
-            "message": "Session ID and email are required",
-        }, 400
-    
-    userid = auth.authorize_session(email, sessionid)
-
-    if not userid:
-        return {
-            "success": False,
-            "message": "Invalid session ID or email",
-        }, 401
-    
     return {
         "success": True,
         "message": "Session authorized",
-        "userid": userid,
     }, 200

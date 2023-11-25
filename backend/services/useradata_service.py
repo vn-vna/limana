@@ -31,6 +31,17 @@ SQL_UPDATE_USER_DATA = """
         userid = ?;
 """
 
+SQL_GET_ALL_USER_DATA = """
+    SELECT
+        userid,
+        email,
+        firstname,
+        lastname,
+        userrole
+    FROM
+        {auth_table}
+"""
+
 
 class UserDataService(app_context.AppService):
     def __init__(self):
@@ -58,7 +69,7 @@ class UserDataService(app_context.AppService):
 
             if not result:
                 return None
-            
+
             return {
                 "email": result[0],
                 "firstname": result[1],
@@ -71,7 +82,7 @@ class UserDataService(app_context.AppService):
 
     def update_userdata(self, uid, userdata):
         print(userdata)
-        
+
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(
                 SQL_UPDATE_USER_DATA.format(
@@ -90,5 +101,26 @@ class UserDataService(app_context.AppService):
 
             if cursor.rowcount == 0:
                 return False
-            
+
             return True
+
+    def get_all_users(self):
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(
+                SQL_GET_ALL_USER_DATA.format(auth_table=self.db.authdb_name.value)
+            )
+
+            result = cursor.fetchall()
+
+            if not result:
+                return None
+
+            return [
+                {
+                    "userid": row[0],
+                    "email": row[1],
+                    "firstname": row[2],
+                    "lastname": row[3],
+                    "userrole": row[4]
+                } for row in result
+            ]

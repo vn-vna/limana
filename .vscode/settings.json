@@ -19,7 +19,7 @@
       "name": "test"
     }
   ],
-  "window.zoomLevel": -1,
+  "window.zoomLevel": -2,
   "[javascriptreact]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
   }

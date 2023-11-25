@@ -6,12 +6,12 @@ import uuid
 
 SQL_CREATE_BOOK_TABLE = """ 
     CREATE TABLE IF NOT EXISTS {book_table} (
-        bookid      CHAR(30)        PRIMARY KEY,
-        title       NVARCHAR(50)    NOT NULL,
-        authorname  NVARCHAR(50)    NOT NULL,
-        publisher   NVARCHAR(50)    NOT NULL,
-        publish_date        DATETIME        NOT NULL,
-        number_instore      INT             NOT NULL
+        bookid          CHAR(30)        PRIMARY KEY,
+        title           NVARCHAR(250)   NOT NULL,
+        authorid        CHAR(50),
+        publisherid     CHAR(50),
+        publish_date    DATETIME        NOT NULL,
+        number_instore  INT             NOT NULL
     );
 """
 
@@ -20,14 +20,15 @@ SQL_INSERT_NEW_BOOK = """
         {book_table} (
             bookid,
             title,
-            authorname,
-            publisher,
-            publish_date
+            authorid,
+            publisherid,
+            publish_date,
             number_instore
         )   
     VALUES
-        (?, ?, ?, ?, ?);
+        (?, ?, ?, ?, ?, ?);
 """
+
 SQL_DELETE_BOOK = """
     DELETE FROM {book_table} WHERE bookid = ?;
 """
@@ -35,13 +36,35 @@ SQL_DELETE_BOOK = """
 SQL_UPDATE_BOOK = """
     UPDATE {book_table} SET
         title = ?,
-        authorname = ?,
-        publisher = ?,
+        authorid = ?,
+        publisherid = ?,
         publish_date = ?,
         number_instore = ?
     WHERE   
         bookid = ?;
 """
+
+SQL_GET_ALL_BOOKS = """
+    SELECT  
+        {book_table}.bookid,
+        {book_table}.title,
+        {author_table}.authorid,
+        {author_table}.firstname || ' ' || {author_table}.lastname AS authorname,
+        {publisher_table}.name AS publisher,
+        {book_table}.publish_date,
+        {book_table}.number_instore
+    FROM
+        {book_table}
+    JOIN {author_table} ON {book_table}.authorid = {author_table}.authorid
+    JOIN {publisher_table} ON {book_table}.publisherid = {publisher_table}.publisherid
+    WHERE
+        {book_table}.title LIKE ? AND
+        {publisher_table}.name LIKE ? AND
+        ({author_table}.firstname || ' ' || {author_table}.lastname) LIKE ? AND
+        {book_table}.publish_date BETWEEN ? AND ?;
+"""
+
+## ------------------ Author ------------------ ##
 
 SQL_CREATE_AUTHOR_TABLE = """
     CREATE TABLE IF NOT EXISTS {author_table} (
@@ -51,6 +74,21 @@ SQL_CREATE_AUTHOR_TABLE = """
         address     NVARCHAR(255),
         phonenum    CHAR(12)
     );
+"""
+
+SQL_GET_ALL_AUTHORS = """
+    SELECT
+        authorid,
+        firstname,
+        lastname,
+        address,
+        phonenum
+    FROM
+        {author_table}
+    WHERE
+        (firstname || ' ' || lastname) LIKE ? AND
+        address LIKE ? AND
+        phonenum LIKE ?;
 """
 
 SQL_INSERT_NEW_AUTHOR = """
@@ -69,6 +107,7 @@ SQL_INSERT_NEW_AUTHOR = """
 SQL_DELETE_AUTHOR = """
     DELETE FROM {author_table} WHERE authorid = ?;
 """
+
 SQL_UPDATE_AUTHOR = """
     UPDATE {author_table} SET
         firstname = ?,
@@ -79,8 +118,11 @@ SQL_UPDATE_AUTHOR = """
         authorid = ?;
 """
 
-SQL_CREATE_NEW_PUBLISHER = """
-    CREATE TABLE IF NOT EXISTES {publisher_table} (
+## ------------------ Author ------------------ ##
+
+## ------------------ Publisher ------------------ ##
+SQL_CREATE_PUBLISHER_TABLE = """
+    CREATE TABLE IF NOT EXISTS {publisher_table} (
         publisherid CHAR(30)        PRIMARY KEY,
         name        NVARCHAR(50)    NOT NULL
     );
@@ -94,15 +136,30 @@ SQL_INSERT_NEW_PUBLISHER = """
     VALUES
         (?, ?);
 """
+
 SQL_DELETE_PUBLISHER = """
     DELETE FROM {publisher_table} WHERE publisherid = ?;
 """
+
 SQL_UPDATE_PUBLISHER = """
     UPDATE {publisher_table} SET
         name = ?
     WHERE   
         publisherid = ?;
 """
+
+SQL_GET_ALL_PUBLISHERS = """
+    SELECT 
+        publisherid,
+        name
+    FROM
+        {publisher_table}
+    WHERE
+        name LIKE ?;
+"""
+
+
+## ------------------ Publisher ------------------ ##
 
 
 class LibraryAdminService(app_context.AppService):
@@ -120,6 +177,11 @@ class LibraryAdminService(app_context.AppService):
             cursor.execute(SQL_CREATE_BOOK_TABLE.format(
                 book_table=self.db.bookdb_name.value
             ))
+
+            cursor.execute(SQL_CREATE_PUBLISHER_TABLE.format(
+                publisher_table=self.db.publisher_name.value
+            ))
+
             self.db.connection.commit()
 
     def stop(self):
@@ -133,11 +195,12 @@ class LibraryAdminService(app_context.AppService):
             ), (
                 bookid,
                 book.get("title"),
-                book.get("authorname"),
-                book.get("publisher"),
-                book.get("publish_date"),
-                book.get("number_instore")
+                book.get("authorid"),
+                book.get("publisherid"),
+                book.get("pubdate"),
+                book.get("instore")
             ))
+
             self.db.connection.commit()
 
     def remove_book(self, book):
@@ -153,6 +216,36 @@ class LibraryAdminService(app_context.AppService):
             ), (
                 book.get("bookid")
             ))
+
+    def get_all_books(self, query):
+        # Get books and search by title, authorname, publisher, publish_date range
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_GET_ALL_BOOKS.format(
+                book_table=self.db.bookdb_name.value,
+                author_table=self.db.authordb_name.value,
+                publisher_table=self.db.publisher_name.value
+            ), [
+                "%" + query.get("title") + "%",
+                "%" + query.get("publisher") + "%",
+                "%" + query.get("author") + "%",
+                query.get("pubfrom"),
+                query.get("pubto")
+            ])
+
+            books = cursor.fetchall()
+
+            return [
+                {
+                    "bookid": book[0],
+                    "title": book[1],
+                    "authorid": book[2],
+                    "authorname": book[3],
+                    "publisher": book[4],
+                    "publish_date": book[5],
+                    "number_instore": book[6]
+                }
+                for book in books
+            ]
 
     def add_author(self, author: dict):
         with contextlib.closing(self.db.get_cursor()) as cursor:
@@ -174,6 +267,8 @@ class LibraryAdminService(app_context.AppService):
                 author_table=self.db.authordb_name.value
             ), (author.get("authorid"),))
 
+            self.db.connection.commit()
+
     def update_author(self, author):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(SQL_UPDATE_AUTHOR.format(
@@ -185,6 +280,49 @@ class LibraryAdminService(app_context.AppService):
                 author.get("phonenum"),
                 author.get("authorid")
             ))
+
+            self.db.connection.commit()
+
+    def get_all_authors(self, query):
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_GET_ALL_AUTHORS.format(
+                author_table=self.db.authordb_name.value
+            ), [
+                "%" + query.get("authorname") + "%",
+                "%" + query.get("address") + "%",
+                "%" + query.get("phonenum") + "%"
+            ])
+
+            authors = cursor.fetchall()
+
+            return [
+                {
+                    "id": author[0],
+                    "firstname": author[1],
+                    "lastname": author[2],
+                    "address": author[3],
+                    "phonenum": author[4]
+                }
+                for author in authors
+            ]
+
+    def get_all_publishers(self, query):
+        with contextlib.closing(self.db.get_cursor()) as cursor:
+            cursor.execute(SQL_GET_ALL_PUBLISHERS.format(
+                publisher_table=self.db.publisher_name.value
+            ), [
+                "%" + query.get("name") + "%"
+            ])
+
+            publishers = cursor.fetchall()
+
+            return [
+                {
+                    "id": publisher[0],
+                    "name": publisher[1]
+                }
+                for publisher in publishers
+            ]
 
     def add_publisher(self, publisher):
         with contextlib.closing(self.db.get_cursor()) as cursor:
@@ -203,6 +341,8 @@ class LibraryAdminService(app_context.AppService):
                 publisher_table=self.db.publisher_name.value
             ), (publisher.get("publisherid"),))
 
+            self.db.connection.commit()
+
     def update_publisher(self, publisher):
         with contextlib.closing(self.db.get_cursor()) as cursor:
             cursor.execute(SQL_UPDATE_PUBLISHER.format(
@@ -211,3 +351,5 @@ class LibraryAdminService(app_context.AppService):
                 publisher.get("name"),
                 publisher.get("publisherid")
             ))
+
+            self.db.connection.commit()

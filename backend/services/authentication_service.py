@@ -146,7 +146,7 @@ class AuthenticationService(app_context.AppService):
             cursor.execute(
                 SQL_GET_USER.format(auth_table=self.db.authdb_name.value),
                 [
-                    user_data["username"],
+                    user_data["email"],
                 ]
             )
 

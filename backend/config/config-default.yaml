@@ -10,6 +10,9 @@ database:
       auth: _tbl_auth
       session: _tbl_session
       book: _tbl_book
+      author: _tbl_author
+      publisher: _tbl_publisher
+      borrow: _tbl_borrow
 
 logging:
   level: DEBUG

@@ -54,19 +54,25 @@ function NavBarContainer() {
               }
 
               {
-                userData && userData.role === 'admin' ?
+                userData?.userrole === 'admin' ?
                   (
-                    <Bootstrap.NavDropdown title="Admin" id="admin-dropdown">
-                      <Bootstrap.NavDropdown.Item>
+                    <>
+                      <Bootstrap.NavDropdown.Item as="div">
                         <Link to="/admin/users" className="nav-link">Users</Link>
                       </Bootstrap.NavDropdown.Item>
-                      <Bootstrap.NavDropdown.Item>
-                        <Link to="/admin/products" className="nav-link">Products</Link>
+                      <Bootstrap.NavDropdown.Item as="div">
+                        <Link to="/admin/books" className="nav-link">Books</Link>
                       </Bootstrap.NavDropdown.Item>
-                      <Bootstrap.NavDropdown.Item>
-                        <Link to="/admin/orders" className="nav-link">Orders</Link>
+                      <Bootstrap.NavDropdown.Item as="div">
+                        <Link to="/admin/authors" className="nav-link">Authors</Link>
                       </Bootstrap.NavDropdown.Item>
-                    </Bootstrap.NavDropdown>
+                      <Bootstrap.NavDropdown.Item as="div">
+                        <Link to="/admin/publishers" className="nav-link">Publishers</Link>
+                      </Bootstrap.NavDropdown.Item>
+                      <Bootstrap.NavDropdown.Item as="div">
+                        <Link to="/admin/borrow" className="nav-link">Borrow</Link>
+                      </Bootstrap.NavDropdown.Item>
+                    </>
                   ) : null
               }
 
